@@ -235,6 +235,7 @@ public class SRTMProvider implements ElevationProvider
             DataAccess heights = getDirectory().find("dem" + intKey);
             demProvider.setHeights(heights);
             boolean loadExisting = false;
+
             try
             {
                 loadExisting = heights.loadExisting();
@@ -249,49 +250,9 @@ public class SRTMProvider implements ElevationProvider
                 heights.create(bytes.length);
                 try
                 {
-                    String zippedURL = baseUrl + "/" + fileDetails + "hgt.zip";
-                    File file = new File(cacheDir, new File(zippedURL).getName());
-                    InputStream is;
-                    // get zip file if not already in cacheDir - unzip later and in-memory only!
-                    if (!file.exists())
-                    {
-                        for (int i = 0; i < 3; i++)
-                        {
-                            try
-                            {
-                                downloader.downloadFile(zippedURL, file.getAbsolutePath());
-                                break;
-                            } catch (SocketTimeoutException ex)
-                            {
-                                // just try again after a little nap
-                                Thread.sleep(2000);
-                                continue;
-                            } catch (FileNotFoundException ex)
-                            {
-                                // now try different URL (with point!), necessary if mirror is used
-                                zippedURL = baseUrl + "/" + fileDetails + ".hgt.zip";
-                                continue;
-                            }
-                        }
-                    }
+                    File file = downloadFile(fileDetails);
 
-                    is = new FileInputStream(file);
-                    ZipInputStream zis = new ZipInputStream(is);
-                    zis.getNextEntry();
-                    BufferedInputStream buff = new BufferedInputStream(zis);
-                    int len;
-                    while ((len = buff.read(bytes)) > 0)
-                    {
-                        for (int bytePos = 0; bytePos < len; bytePos += 2)
-                        {
-                            short val = BIT_UTIL.toShort(bytes, bytePos);
-                            if (val < -1000 || val > 12000)
-                                val = Short.MIN_VALUE;
-
-                            heights.setShort(bytePos, val);
-                        }
-                    }
-                    heights.flush();
+                    processFile(heights, bytes, file);
 
                     // demProvider.toImage("x" + file.getName() + ".png");
                     // TODO remove hgt and zip?
@@ -303,6 +264,57 @@ public class SRTMProvider implements ElevationProvider
         }
 
         return demProvider.getHeight(lat, lon);
+    }
+
+    private File downloadFile(String fileDetails) throws IOException, InterruptedException {
+        String zippedURL = baseUrl + fileDetails + ".hgt.zip";
+        File file = new File(cacheDir, new File(zippedURL).getName());
+
+        // get zip file if not already in cacheDir - unzip later and in-memory only!
+        if (!file.exists())
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    downloader.downloadFile(zippedURL, file.getAbsolutePath());
+                    break;
+                } catch (SocketTimeoutException ex)
+                {
+                    // just try again after a little nap
+                    Thread.sleep(2000);
+                    continue;
+                } catch (FileNotFoundException ex)
+                {
+                    // now try different URL (with point!), necessary if mirror is used
+                    zippedURL = baseUrl + "/" + fileDetails + ".hgt.zip";
+                    continue;
+                }
+            }
+        }
+        return file;
+    }
+
+    private void processFile(DataAccess heights, byte[] bytes, File file) throws IOException {
+        InputStream is;
+
+        is = new FileInputStream(file);
+        ZipInputStream zis = new ZipInputStream(is);
+        zis.getNextEntry();
+        BufferedInputStream buff = new BufferedInputStream(zis);
+        int len;
+        while ((len = buff.read(bytes)) > 0)
+        {
+            for (int bytePos = 0; bytePos < len; bytePos += 2)
+            {
+                short val = BIT_UTIL.toShort(bytes, bytePos);
+                if (val < -1000 || val > 12000)
+                    val = Short.MIN_VALUE;
+
+                heights.setShort(bytePos, val);
+            }
+        }
+        heights.flush();
     }
 
     @Override
