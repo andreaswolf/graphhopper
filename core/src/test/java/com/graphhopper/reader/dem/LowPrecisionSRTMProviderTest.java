@@ -30,14 +30,14 @@ import org.junit.Before;
  *
  * @author Peter Karich
  */
-public class SRTMProviderTest
+public class LowPrecisionSRTMProviderTest
 {
-    SRTMProvider instance;
+    LowPrecisionSRTMProvider instance;
 
     @Before
     public void setUp()
     {
-        instance = new SRTMProvider();
+        instance = new LowPrecisionSRTMProvider();
     }
 
     @After

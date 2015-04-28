@@ -18,6 +18,8 @@
 package com.graphhopper.reader;
 
 import static org.junit.Assert.*;
+
+import com.graphhopper.reader.dem.LowPrecisionSRTMProvider;
 import gnu.trove.list.TLongList;
 
 import java.io.File;
@@ -36,7 +38,6 @@ import org.junit.Test;
 
 import com.graphhopper.GraphHopper;
 import com.graphhopper.reader.dem.ElevationProvider;
-import com.graphhopper.reader.dem.SRTMProvider;
 import com.graphhopper.routing.util.*;
 import com.graphhopper.storage.*;
 import com.graphhopper.util.EdgeExplorer;
@@ -684,7 +685,7 @@ public class OSMReaderTest
     {
         GraphHopper hopper = new GraphHopperTest("test-osm5.xml");
         // get N10E046.hgt.zip
-        ElevationProvider provider = new SRTMProvider();
+        ElevationProvider provider = new LowPrecisionSRTMProvider();
         provider.setCacheDir(new File("./files"));
         hopper.setElevationProvider(provider);
         hopper.importOrLoad();
