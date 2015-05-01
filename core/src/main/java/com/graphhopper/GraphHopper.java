@@ -21,6 +21,7 @@ import com.graphhopper.reader.DataReader;
 import com.graphhopper.reader.OSMReader;
 import com.graphhopper.reader.dem.CGIARProvider;
 import com.graphhopper.reader.dem.ElevationProvider;
+import com.graphhopper.reader.dem.HighPrecisionSRTMProvider;
 import com.graphhopper.reader.dem.LowPrecisionSRTMProvider;
 import com.graphhopper.routing.*;
 import com.graphhopper.routing.ch.PrepareContractionHierarchies;
@@ -536,6 +537,9 @@ public class GraphHopper implements GraphHopperAPI
         if (eleProviderStr.equalsIgnoreCase("srtm"))
         {
             tmpProvider = new LowPrecisionSRTMProvider();
+        } else if (eleProviderStr.equalsIgnoreCase("srtmhigh"))
+        {
+            tmpProvider = new HighPrecisionSRTMProvider();
         } else if (eleProviderStr.equalsIgnoreCase("cgiar"))
         {
             CGIARProvider cgiarProvider = new CGIARProvider();
