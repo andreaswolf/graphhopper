@@ -42,7 +42,7 @@ public abstract class SRTMProvider implements ElevationProvider
 {
 
     private static final BitUtil BIT_UTIL = BitUtil.BIG;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected int WIDTH;
     private Directory dir;
     private DAType daType = DAType.MMAP;

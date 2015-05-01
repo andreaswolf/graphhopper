@@ -69,6 +69,7 @@ public class HighPrecisionSRTMProvider extends SRTMProvider
     private final double invPrecision = 1 / precision;
     // mirror: base = "http://mirror.ufs.ac.za/datasets/SRTM3/"
 
+    private LowPrecisionSRTMProvider lowResProvider = new LowPrecisionSRTMProvider();
 
     public HighPrecisionSRTMProvider()
     {
@@ -78,10 +79,15 @@ public class HighPrecisionSRTMProvider extends SRTMProvider
 
     String getFileString(double lat, double lon)
     {
+        return getElevationAsString(lat, lon)  + ".SRTMGL1";
+    }
+
+    private String getElevationAsString(double lat, double lon)
+    {
         int minLat = Math.abs(down(lat));
         int minLon = Math.abs(down(lon));
 
-        return String.format("%s%02d%s%03d.SRTMGL1",
+        return String.format("%s%02d%s%03d",
                 (lat >= 0) ? "N" : "S",
                 minLat,
                 (lon >= 0) ? "E" : "W",
@@ -96,7 +102,8 @@ public class HighPrecisionSRTMProvider extends SRTMProvider
             return super.getEle(lat, lon);
         } catch (RuntimeException ex)
         {
-            // TODO do fallback to low-res version
+            logger.warn("Falling back to low-resolution SRTM data for " + getElevationAsString(lat, lon));
+            return lowResProvider.getEle(lat, lon);
         }
     }
 
