@@ -737,6 +737,7 @@ public class OSMReader implements DataReader
             if (exitOnlyPillarNodeException)
                 throw ex;
         }
+        logger.debug("Traffic lights: " + trafficLightCounter);
         return newEdges;
     }
 
