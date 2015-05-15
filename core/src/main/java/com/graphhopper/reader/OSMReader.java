@@ -709,7 +709,7 @@ public class OSMReader implements DataReader
                 
                 if (internalNodeId > -TOWER_NODE) // node is pillar node
                 {
-                    boolean convertToTowerNode = i == 0 || i == lastIndex;
+                    boolean convertToTowerNode = i == 0 || i == lastIndex || dataLayer.hasTrafficLight(osmNodeId);
                     if (!convertToTowerNode)
                     {
                         lastInBoundsPillarNode = internalNodeId;
