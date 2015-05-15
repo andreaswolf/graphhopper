@@ -22,6 +22,7 @@ import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.storage.EdgeEntry;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.NodeAccess;
+import com.graphhopper.storage.extensions.RoadSignEncoder;
 import com.graphhopper.util.*;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
@@ -370,6 +371,8 @@ public class Path
             return ways;
         }
 
+        final RoadSignEncoder signEncoder = new RoadSignEncoder(graph);
+
         final int tmpNode = getFromNode();
         forEveryEdge(new EdgeVisitor()
         {
@@ -415,6 +418,7 @@ public class Path
                 double adjLon = nodeAccess.getLongitude(adjNode);
                 double latitude, longitude;
 
+                System.out.println("Edge: " + edge.getName() + "; " + baseNode + "-" + adjNode);
                 PointList wayGeo = edge.fetchWayGeometry(3);
                 boolean isRoundabout = encoder.isBool(flags, encoder.K_ROUNDABOUT);
 
@@ -430,6 +434,7 @@ public class Path
                     assert java.lang.Double.compare(prevLon, nodeAccess.getLongitude(baseNode)) == 0;
                 }
 
+                // TODO how to find out if this way is traversed forward or backward?
                 name = edge.getName();
                 annotation = encoder.getAnnotation(flags, tr);
 

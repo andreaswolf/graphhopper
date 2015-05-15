@@ -18,6 +18,7 @@
 package com.graphhopper.reader;
 
 import static com.graphhopper.util.Helper.nf;
+import com.graphhopper.storage.extensions.RoadSignEncoder;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TIntLongMap;
@@ -118,6 +119,8 @@ public class OSMReader implements DataReader
     private File osmFile;
     private Map<FlagEncoder, EdgeExplorer> outExplorerMap = new HashMap<FlagEncoder, EdgeExplorer>();
     private Map<FlagEncoder, EdgeExplorer> inExplorerMap = new HashMap<FlagEncoder, EdgeExplorer>();
+    private RoadSignEncoder roadSigns;
+
 
     public OSMReader( GraphStorage storage )
     {
@@ -128,6 +131,7 @@ public class OSMReader implements DataReader
         osmNodeIdToNodeFlagsMap = new TLongLongHashMap(200, .5f, 0, 0);
         osmWayIdToRouteWeightMap = new TLongLongHashMap(200, .5f, 0, 0);
         pillarInfo = new PillarInfo(nodeAccess.is3D(), graphStorage.getDirectory());
+        roadSigns = new RoadSignEncoder(graphStorage);
     }
 
     @Override
@@ -564,9 +568,15 @@ public class OSMReader implements DataReader
             // analyze node tags for barriers
             if (node.hasTags())
             {
+                if (node.hasTag("highway", "traffic_signals"))
+                {
+                    // TODO WTF? get node id in a sane way here…
+                    roadSigns.markTrafficLight(-getNodeMap().get(node.getId())-3, true);
+                }
                 long nodeFlags = encodingManager.handleNodeTags(node);
                 if (nodeFlags != 0)
                     getNodeFlagsMap().put(node.getId(), nodeFlags);
+
             }
 
             locations++;
@@ -585,7 +595,7 @@ public class OSMReader implements DataReader
         double lat = node.getLat();
         double lon = node.getLon();
         double ele = getElevation(node);
-        if (nodeType == TOWER_NODE)
+        if (nodeType == TOWER_NODE || node.hasTag("highway", "traffic_signals"))
         {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE)

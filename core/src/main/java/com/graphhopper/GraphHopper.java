@@ -26,6 +26,7 @@ import com.graphhopper.routing.*;
 import com.graphhopper.routing.ch.PrepareContractionHierarchies;
 import com.graphhopper.routing.util.*;
 import com.graphhopper.storage.*;
+import com.graphhopper.storage.extensions.RoadSignExtension;
 import com.graphhopper.storage.index.*;
 import com.graphhopper.util.*;
 import com.graphhopper.util.shapes.GHPoint;
@@ -733,7 +734,7 @@ public class GraphHopper implements GraphHopperAPI
 
         GHDirectory dir = new GHDirectory(ghLocation, dataAccessType);
         if (chEnabled)
-            graph = new LevelGraphStorage(dir, encodingManager, hasElevation());
+            graph = new LevelGraphStorage(dir, encodingManager, hasElevation(), new RoadSignExtension());
         else if (encodingManager.needsTurnCostsSupport())
             graph = new GraphHopperStorage(dir, encodingManager, hasElevation(), new TurnCostExtension());
         else

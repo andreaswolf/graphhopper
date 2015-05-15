@@ -50,6 +50,12 @@ public class LevelGraphStorage extends GraphHopperStorage implements LevelGraph
         baseGraph = new BaseGraph(this);
     }
 
+    public LevelGraphStorage( Directory dir, EncodingManager encodingManager, boolean enabled3D, GraphExtension storageExtension )
+    {
+        super(dir, encodingManager, enabled3D, storageExtension);
+        baseGraph = new BaseGraph(this);
+    }
+
     @Override
     public boolean isShortcut( int edgeId )
     {
