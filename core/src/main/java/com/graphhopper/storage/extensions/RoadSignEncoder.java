@@ -10,6 +10,7 @@ public class RoadSignEncoder
      * Positions of bits for encoding various pieces of information
      */
     final byte TRAFFIC_LIGHT_BIT = 1;
+    final byte STOP_SIGN_BIT = 2;
 
     RoadSignExtension storage;
 
@@ -36,6 +37,21 @@ public class RoadSignEncoder
     {
         int nodeFieldValue = nodes.getAdditionalNodeField(nodeId);
         nodeFieldValue = setBitInField(nodeFieldValue, TRAFFIC_LIGHT_BIT, value);
+        nodes.setAdditionalNodeField(nodeId, nodeFieldValue);
+
+        return nodeFieldValue;
+    }
+
+    public boolean hasStopSign(int nodeId) {
+        int nodeFieldValue = nodes.getAdditionalNodeField(nodeId);
+
+        return hasBitSet(nodeFieldValue, STOP_SIGN_BIT);
+    }
+
+    public int markStopSign(int nodeId, boolean value)
+    {
+        int nodeFieldValue = nodes.getAdditionalNodeField(nodeId);
+        nodeFieldValue = setBitInField(nodeFieldValue, STOP_SIGN_BIT, value);
         nodes.setAdditionalNodeField(nodeId, nodeFieldValue);
 
         return nodeFieldValue;

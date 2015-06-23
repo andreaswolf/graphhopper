@@ -568,10 +568,14 @@ public class OSMReader implements DataReader
             // analyze node tags for barriers
             if (node.hasTags())
             {
+                int nodeId = -getNodeMap().get(node.getId()) - 3;
                 if (node.hasTag("highway", "traffic_signals"))
                 {
                     // TODO WTF? get node id in a sane way here…
-                    roadSigns.markTrafficLight(-getNodeMap().get(node.getId())-3, true);
+                    roadSigns.markTrafficLight(nodeId, true);
+                } else if (node.hasTag("highway", "stop"))
+                {
+                    roadSigns.markStopSign(nodeId, true);
                 }
                 long nodeFlags = encodingManager.handleNodeTags(node);
                 if (nodeFlags != 0)
@@ -595,7 +599,7 @@ public class OSMReader implements DataReader
         double lat = node.getLat();
         double lon = node.getLon();
         double ele = getElevation(node);
-        if (nodeType == TOWER_NODE || node.hasTag("highway", "traffic_signals"))
+        if (nodeType == TOWER_NODE || hasRoadSign(node))
         {
             addTowerNode(node.getId(), lat, lon, ele);
         } else if (nodeType == PILLAR_NODE)
@@ -719,7 +723,7 @@ public class OSMReader implements DataReader
                 
                 if (internalNodeId > -TOWER_NODE) // node is pillar node
                 {
-                    boolean convertToTowerNode = i == 0 || i == lastIndex || dataLayer.hasTrafficLight(osmNodeId);
+                    boolean convertToTowerNode = i == 0 || i == lastIndex;
                     if (!convertToTowerNode)
                     {
                         lastInBoundsPillarNode = internalNodeId;
@@ -751,8 +755,17 @@ public class OSMReader implements DataReader
             if (exitOnlyPillarNodeException)
                 throw ex;
         }
-        logger.debug("Traffic lights: " + trafficLightCounter);
         return newEdges;
+    }
+
+    /**
+     * Checks if the given node has any interesting road sign that we will need later on.
+     *
+     * This information is used to convert those nodes to tower nodes if they were pillar nodes before, so
+     * we can store more information about them.
+     */
+    protected boolean hasRoadSign(OSMNode node) {
+        return (node.hasTag("highway", "traffic_signals") || node.hasTag("highway", "stop"));
     }
 
     EdgeIteratorState addEdge( int fromIndex, int toIndex, PointList pointList, long flags, long wayOsmId )
