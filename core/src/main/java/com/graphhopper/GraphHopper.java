@@ -945,12 +945,8 @@ public class GraphHopper implements GraphHopperAPI
         {
             // fall back to normal traversing
             tmpAlgoFactory = new RoutingAlgorithmFactorySimple();
-            queryGraph = new QueryGraph(graph.getBaseGraph());
-        } else
-        {
-            queryGraph = new QueryGraph(graph);
         }
-
+        queryGraph = createQueryGraph(vehicle);
         queryGraph.lookup(qResults);
 
         List<Path> paths = new ArrayList<Path>(points.size() - 1);
@@ -992,6 +988,19 @@ public class GraphHopper implements GraphHopperAPI
 
         rsp.setDebugInfo(debug);
         return paths;
+    }
+
+    protected QueryGraph createQueryGraph(String vehicle)
+    {
+        QueryGraph queryGraph;
+        if (chEnabled && !vehicle.equalsIgnoreCase(getDefaultVehicle().toString()))
+        {
+            queryGraph = new QueryGraph(graph.getBaseGraph());
+        } else
+        {
+            queryGraph = new QueryGraph(graph);
+        }
+        return queryGraph;
     }
 
     protected LocationIndex createLocationIndex( Directory dir )
