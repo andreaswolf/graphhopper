@@ -133,9 +133,9 @@ public class GraphHopperServlet extends GHBaseServlet
             writeResponse(res, createGPXString(httpReq, res, ghRsp));
         } else
         {
-            JsonWriter writer = new JsonWriter(hopper);
-            Map<String, Object> map = writer.createJson(ghRsp,
-                    calcPoints, pointsEncoded, enableElevation, enableInstructions);
+            JsonWriter writer = new JsonWriter(hopper, calcPoints, pointsEncoded, enableElevation, enableInstructions);
+            Map<String, Object> map = writer.createJson(ghRsp);
+
             Object infoMap = map.get("info");
             if (infoMap != null)
                 ((Map) infoMap).put("took", Math.round(took * 1000));

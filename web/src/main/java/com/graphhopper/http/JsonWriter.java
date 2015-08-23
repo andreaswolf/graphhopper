@@ -14,16 +14,29 @@ public class JsonWriter
 
     protected GraphHopper hopper;
 
-    public JsonWriter(GraphHopper hopper)
+    protected boolean calcPoints;
+
+    protected boolean encodePoints;
+
+    protected boolean includeElevation;
+
+    protected boolean enableInstructions;
+
+    public JsonWriter(GraphHopper hopper, boolean calcPoints, boolean encodePoints, boolean includeElevation,
+                      boolean enableInstructions)
     {
         this.hopper = hopper;
+        this.calcPoints = calcPoints;
+        this.encodePoints = encodePoints;
+        this.includeElevation = includeElevation;
+        this.enableInstructions = enableInstructions;
     }
 
-    public Map<String, Object> createJson(GHResponse rsp,
-                                          boolean calcPoints,
-                                          boolean pointsEncoded,
-                                          boolean includeElevation,
-                                          boolean enableInstructions)
+    public JsonWriter(GraphHopper hopper) {
+        this(hopper, true, false, true, true);
+    }
+
+    public Map<String, Object> createJson(GHResponse rsp)
     {
         Map<String, Object> json = new HashMap<String, Object>();
         Map<String, Object> jsonInfo = new HashMap<String, Object>();
@@ -50,7 +63,7 @@ public class JsonWriter
 
             if (calcPoints)
             {
-                jsonPath.put("points_encoded", pointsEncoded);
+                jsonPath.put("points_encoded", encodePoints);
 
                 PointList points = rsp.getPoints();
                 if (points.getSize() >= 2)
@@ -60,7 +73,7 @@ public class JsonWriter
                     jsonPath.put("bbox", rsp.calcRouteBBox(maxBounds2D).toGeoJson());
                 }
 
-                jsonPath.put("points", createPoints(points, pointsEncoded, includeElevation));
+                jsonPath.put("points", createPoints(points));
 
                 if (enableInstructions)
                 {
@@ -73,9 +86,9 @@ public class JsonWriter
         return json;
     }
 
-    protected Object createPoints(PointList points, boolean pointsEncoded, boolean includeElevation)
+    protected Object createPoints(PointList points)
     {
-        if (pointsEncoded)
+        if (encodePoints)
             return WebHelper.encodePolyline(points, includeElevation);
 
         Map<String, Object> jsonPoints = new HashMap<String, Object>();
