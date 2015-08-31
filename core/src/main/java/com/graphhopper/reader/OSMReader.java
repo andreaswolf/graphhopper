@@ -19,6 +19,7 @@ package com.graphhopper.reader;
 
 import static com.graphhopper.util.Helper.nf;
 import com.graphhopper.storage.extensions.RoadSignEncoder;
+import com.graphhopper.storage.extensions.RoadSignExtension;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import gnu.trove.map.TIntLongMap;
@@ -131,7 +132,9 @@ public class OSMReader implements DataReader
         osmNodeIdToNodeFlagsMap = new TLongLongHashMap(200, .5f, 0, 0);
         osmWayIdToRouteWeightMap = new TLongLongHashMap(200, .5f, 0, 0);
         pillarInfo = new PillarInfo(nodeAccess.is3D(), graphStorage.getDirectory());
-        roadSigns = new RoadSignEncoder(graphStorage);
+        if (this.graphStorage.getExtension() instanceof RoadSignExtension) {
+            roadSigns = new RoadSignEncoder(graphStorage);
+        }
     }
 
     @Override
@@ -569,13 +572,15 @@ public class OSMReader implements DataReader
             if (node.hasTags())
             {
                 int nodeId = -getNodeMap().get(node.getId()) - 3;
-                if (node.hasTag("highway", "traffic_signals"))
-                {
-                    // TODO WTF? get node id in a sane way here…
-                    roadSigns.markTrafficLight(nodeId, true);
-                } else if (node.hasTag("highway", "stop"))
-                {
-                    roadSigns.markStopSign(nodeId, true);
+                if (roadSigns != null) {
+                    if (node.hasTag("highway", "traffic_signals"))
+                    {
+                        // TODO WTF? get node id in a sane way here…
+                        roadSigns.markTrafficLight(nodeId, true);
+                    } else if (node.hasTag("highway", "stop"))
+                    {
+                        roadSigns.markStopSign(nodeId, true);
+                    }
                 }
                 long nodeFlags = encodingManager.handleNodeTags(node);
                 if (nodeFlags != 0)

@@ -371,8 +371,6 @@ public class Path
             return ways;
         }
 
-        final RoadSignEncoder signEncoder = new RoadSignEncoder(graph);
-
         final int tmpNode = getFromNode();
         forEveryEdge(new EdgeVisitor()
         {
