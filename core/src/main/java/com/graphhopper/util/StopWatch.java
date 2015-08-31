@@ -50,6 +50,11 @@ public class StopWatch
         return this;
     }
 
+    public StopWatch reset() {
+        nanoTime = 0;
+        return this;
+    }
+
     public StopWatch stop()
     {
         if (lastTime < 0)
