@@ -38,6 +38,7 @@ public class JsonWriter
 
     public Map<String, Object> createJson(GHResponse rsp)
     {
+        // TODO remove this in favor of SimpleRouteSerializer/RouteSerializer
         Map<String, Object> json = new HashMap<String, Object>();
         Map<String, Object> jsonInfo = new HashMap<String, Object>();
         json.put("info", jsonInfo);
@@ -68,7 +69,7 @@ public class JsonWriter
                 PointList points = rsp.getPoints();
                 if (points.getSize() >= 2)
                 {
-                    BBox maxBounds = hopper.getGraph().getBounds();
+                    BBox maxBounds = hopper.getGraphHopperStorage().getBounds();
                     BBox maxBounds2D = new BBox(maxBounds.minLon, maxBounds.maxLon, maxBounds.minLat, maxBounds.maxLat);
                     jsonPath.put("bbox", rsp.calcRouteBBox(maxBounds2D).toGeoJson());
                 }

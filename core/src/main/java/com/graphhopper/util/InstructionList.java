@@ -162,7 +162,7 @@ public class InstructionList implements Iterable<Instruction>
     /**
      * Creates the standard GPX string out of the points according to the schema found here:
      * https://graphhopper.com/public/schema/gpx-1.1.xsd
-     * <p/>
+     * <p>
      * @return string to be stored as gpx file
      */
     public String createGPX()
@@ -313,6 +313,8 @@ public class InstructionList implements Iterable<Instruction>
                         } else
                         {
                             distance = distCalc.calcNormalizedDist(lat, lon, currLat, currLon);
+                            if (pointIndex > 0)
+                                index++;
                         }
 
                         if (distance < foundMinDistance)
@@ -321,7 +323,6 @@ public class InstructionList implements Iterable<Instruction>
                             foundInstruction = index;
                         }
                     }
-
                     prevLat = currLat;
                     prevLon = currLon;
                 }

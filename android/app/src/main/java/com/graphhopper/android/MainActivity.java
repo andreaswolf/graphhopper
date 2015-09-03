@@ -72,11 +72,12 @@ public class MainActivity extends Activity
     private volatile boolean prepareInProgress = false;
     private volatile boolean shortestPathRunning = false;
     private String currentArea = "berlin";
-    private String fileListURL = "https://graphhopper.com/public/maps/0.5/";
+    private String fileListURL = "https://graphhopper.com/public/maps/0.6/";
     private String prefixURL = fileListURL;
     private String downloadURL;
     private File mapsFolder;
     private TileCache tileCache;
+    private TileRendererLayer tileRendererLayer;
 
     protected boolean onMapTap( LatLong tapLatLong, Point layerXY, Point tapXY )
     {
@@ -177,6 +178,9 @@ public class MainActivity extends Activity
         hopper = null;
         // necessary?
         System.gc();
+
+        // Cleanup Mapsforge
+        this.mapView.destroyAll();
     }
 
     boolean isReady()
@@ -240,7 +244,7 @@ public class MainActivity extends Activity
             protected List<String> saveDoInBackground( Void... params )
                     throws Exception
             {
-                String[] lines = new AndroidDownloader().downloadAsString(fileListURL).split("\n");
+                String[] lines = new AndroidDownloader().downloadAsString(fileListURL, false).split("\n");
                 List<String> res = new ArrayList<String>();
                 for (String str : lines)
                 {
@@ -261,7 +265,7 @@ public class MainActivity extends Activity
             @Override
             protected void onPostExecute( List<String> nameList )
             {
-                if(nameList.isEmpty())
+                if (nameList.isEmpty())
                 {
                     logUser("No maps created for your version!? " + fileListURL);
                     return;
@@ -296,7 +300,7 @@ public class MainActivity extends Activity
     }
 
     private void chooseArea( Button button, final Spinner spinner,
-            List<String> nameList, final MySpinnerListener mylistener )
+                             List<String> nameList, final MySpinnerListener mylistener )
     {
         final Map<String, String> nameToFullName = new TreeMap<String, String>();
         for (String fullName : nameList)
@@ -403,15 +407,15 @@ public class MainActivity extends Activity
 
         mapView.getLayerManager().getLayers().clear();
 
-        TileRendererLayer tileRendererLayer = new TileRendererLayer(tileCache, mapDataStore,
-        		mapView.getModel().mapViewPosition, false, true, AndroidGraphicFactory.INSTANCE)
-                {
-                    @Override
-                    public boolean onLongPress( LatLong tapLatLong, Point layerXY, Point tapXY )
-                    {
-                        return onMapTap(tapLatLong, layerXY, tapXY);
-                    }
-                };
+        tileRendererLayer = new TileRendererLayer(tileCache, mapDataStore,
+                mapView.getModel().mapViewPosition, false, true, AndroidGraphicFactory.INSTANCE)
+        {
+            @Override
+            public boolean onLongPress( LatLong tapLatLong, Point layerXY, Point tapXY )
+            {
+                return onMapTap(tapLatLong, layerXY, tapXY);
+            }
+        };
         tileRendererLayer.setTextScale(1.5f);
         tileRendererLayer.setXmlRenderTheme(InternalRenderTheme.OSMARENDER);
         mapView.getModel().mapViewPosition.setMapPosition(new MapPosition(mapDataStore.boundingBox().getCenterPoint(), (byte) 15));
@@ -430,7 +434,7 @@ public class MainActivity extends Activity
             {
                 GraphHopper tmpHopp = new GraphHopper().forMobile();
                 tmpHopp.load(new File(mapsFolder, currentArea).getAbsolutePath());
-                log("found graph " + tmpHopp.getGraph().toString() + ", nodes:" + tmpHopp.getGraph().getNodes());
+                log("found graph " + tmpHopp.getGraphHopperStorage().toString() + ", nodes:" + tmpHopp.getGraphHopperStorage().getNodes());
                 hopper = tmpHopp;
                 return null;
             }
@@ -460,16 +464,13 @@ public class MainActivity extends Activity
     {
         Paint paintStroke = AndroidGraphicFactory.INSTANCE.createPaint();
         paintStroke.setStyle(Style.STROKE);
-        paintStroke.setColor(Color.argb(200, 0, 0xCC, 0x33));
+        paintStroke.setColor(Color.argb(128, 0, 0xCC, 0x33));
         paintStroke.setDashPathEffect(new float[]
-        {
-            25, 15
-        });
+                {
+                        25, 15
+                });
         paintStroke.setStrokeWidth(8);
 
-        // TODO: new mapsforge version wants an mapsforge-paint, not an android paint.
-        // This doesn't seem to support transparceny
-        //paintStroke.setAlpha(128);
         Polyline line = new Polyline((org.mapsforge.core.graphics.Paint) paintStroke, AndroidGraphicFactory.INSTANCE);
         List<LatLong> geoPoints = line.getLatLongs();
         PointList tmp = response.getPoints();
@@ -489,7 +490,7 @@ public class MainActivity extends Activity
     }
 
     public void calcPath( final double fromLat, final double fromLon,
-            final double toLat, final double toLon )
+                          final double toLat, final double toLon )
     {
 
         log("calculating path ...");
@@ -546,6 +547,7 @@ public class MainActivity extends Activity
         log(str);
         Toast.makeText(this, str, Toast.LENGTH_LONG).show();
     }
+
     private static final int NEW_MENU_ID = Menu.FIRST + 1;
 
     @Override

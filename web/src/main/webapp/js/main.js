@@ -29,7 +29,7 @@ var defaultTranslationMap = null;
 var enTranslationMap = null;
 var routeSegmentPopup = null;
 var elevationControl = null;
-var activeLayer = 'MapQuest';
+var activeLayer = '';
 var i18nIsInitialized;
 var layerControl;
 
@@ -296,8 +296,14 @@ function initMap(selectLayer) {
     if (L.Browser.retina)
         tp = "lr";
 
-    var sorbianLang = L.tileLayer('http://map.dgpsonline.eu/osmsb/{z}/{x}/{y}.png', {
-        attribution: osmAttr + ', <a href="http://www.alberding.eu/">© Alberding GmbH, CC-BY-SA</a>'
+    var lyrk = L.tileLayer('https://tiles.lyrk.org/' + tp + '/{z}/{x}/{y}?apikey=6e8cfef737a140e2a58c8122aaa26077', {
+        attribution: osmAttr + ', <a href="https://geodienste.lyrk.de/">Lyrk</a>',
+        subdomains: ['a', 'b', 'c']
+    });
+
+    var omniscale = L.tileLayer.wms('https://maps.omniscale.net/v1/mapsgraph-bf48cc0b/tile', {
+        layers: 'osm',
+        attribution: osmAttr + ', &copy; <a href="http://maps.omniscale.com/">Omniscale</a>'
     });
 
     var mapquest = L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
@@ -312,6 +318,15 @@ function initMap(selectLayer) {
 
     var openMapSurfer = L.tileLayer('http://openmapsurfer.uni-hd.de/tiles/roads/x={x}&y={y}&z={z}', {
         attribution: osmAttr + ', <a href="http://openmapsurfer.uni-hd.de/contact.html">GIScience Heidelberg</a>'
+    });
+
+    // not an option as too fast over limit
+//    var mapbox= L.tileLayer('https://{s}.tiles.mapbox.com/v4/peterk.map-vkt0kusv/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoicGV0ZXJrIiwiYSI6IkdFc2FJd2MifQ.YUd7dS_gOpT3xrQnB8_K-w', {
+//        attribution: osmAttr + ', <a href="https://www.mapbox.com/about/maps/">&copy; MapBox</a>'
+//    });
+
+    var sorbianLang = L.tileLayer('http://map.dgpsonline.eu/osmsb/{z}/{x}/{y}.png', {
+        attribution: osmAttr + ', <a href="http://www.alberding.eu/">&copy; Alberding GmbH, CC-BY-SA</a>'
     });
 
     var thunderTransport = L.tileLayer('http://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png', {
@@ -351,6 +366,8 @@ function initMap(selectLayer) {
     });
 
     var baseMaps = {
+        "Lyrk": lyrk,
+        "Omniscale": omniscale,
         "MapQuest": mapquest,
         "MapQuest Aerial": mapquestAerial,
         "Esri Aerial": esriAerial,
@@ -366,7 +383,7 @@ function initMap(selectLayer) {
 
     var defaultLayer = baseMaps[selectLayer];
     if (!defaultLayer)
-        defaultLayer = mapquest;
+        defaultLayer = omniscale;
 
     // default
     map = L.map('map', {
@@ -440,7 +457,7 @@ function initMap(selectLayer) {
     map.on('baselayerchange', function (a) {
         if (a.name) {
             activeLayer = a.name;
-            $("#export-link a").attr('href', function(i, v) {
+            $("#export-link a").attr('href', function (i, v) {
                 return v.replace(/(layer=)([\w\s]+)/, '$1' + activeLayer);
             });
         }
@@ -874,9 +891,7 @@ function doGeoCoding(input, limit, timeout) {
         type: "GET",
         dataType: "json",
         timeout: timeout
-    }).fail(
-            createCallback("[nominatim] Problem while looking up location " + input)
-            );
+    }).fail(createCallback("[nominatim] Problem while looking up location " + input));
 }
 
 function createCallback(errorFallback) {
@@ -936,17 +951,21 @@ function routeLatLng(request, doQuery) {
     map.contextmenu.setDisabled(menuIntermediate, false);
 
     $("#vehicles button").removeClass("selectvehicle");
-    $("button#" + request.vehicle.toLowerCase()).addClass("selectvehicle");
+    $("button#" + request.getVehicle().toLowerCase()).addClass("selectvehicle");
 
     var urlForAPI = request.createURL();
     descriptionDiv.html('<img src="img/indicator.gif"/> Search Route ...');
     request.doRequest(urlForAPI, function (json) {
         descriptionDiv.html("");
-        if (json.info.errors) {
-            var tmpErrors = json.info.errors;
+        if (json.message) {
+            var tmpErrors = json.message;
             log(tmpErrors);
-            for (var m = 0; m < tmpErrors.length; m++) {
-                descriptionDiv.append("<div class='error'>" + tmpErrors[m].message + "</div>");
+            if (json.hints) {
+                for (var m = 0; m < json.hints.length; m++) {
+                    descriptionDiv.append("<div class='error'>" + json.hints[m].message + "</div>");
+                }
+            } else {
+                descriptionDiv.append("<div class='error'>" + tmpErrors + "</div>");
             }
             return;
         }
@@ -1041,8 +1060,7 @@ function routeLatLng(request, doQuery) {
                 hiddenDiv.toggle();
             });
             $("#info").append(toggly);
-            var infoStr = "took: " + round(json.info.took / 1000, 1000) + "s"
-                    + ", points: " + path.points.coordinates.length;
+            var infoStr = "points: " + path.points.coordinates.length;
 
             hiddenDiv.append("<span>" + infoStr + "</span>");
 
@@ -1051,10 +1069,11 @@ function routeLatLng(request, doQuery) {
             var osmRouteLink = $("<br/><a>view on OSM</a>");
 
             var osmVehicle = "bicycle";
-            if (request.vehicle.toUpperCase() === "FOOT") {
+            if (request.getVehicle().toUpperCase() === "FOOT") {
                 osmVehicle = "foot";
             }
-            osmRouteLink.attr("href", "http://www.openstreetmap.org/directions?engine=graphhopper_" + osmVehicle + "&route=" + encodeURIComponent(request.from.lat + "," + request.from.lng + ";" + request.to.lat + "," + request.to.lng));
+            osmRouteLink.attr("href", "http://www.openstreetmap.org/directions?engine=graphhopper_" 
+                    + osmVehicle + "&route=" + encodeURIComponent(request.from.lat + "," + request.from.lng + ";" + request.to.lat + "," + request.to.lng));
             hiddenDiv.append(osmRouteLink);
 
             var osrmLink = $("<a>OSRM</a>");
@@ -1064,11 +1083,11 @@ function routeLatLng(request, doQuery) {
             var googleLink = $("<a>Google</a> ");
             var addToGoogle = "";
             var addToBing = "";
-            if (request.vehicle.toUpperCase() === "FOOT") {
+            if (request.getVehicle().toUpperCase() === "FOOT") {
                 addToGoogle = "&dirflg=w";
                 addToBing = "&mode=W";
-            } else if ((request.vehicle.toUpperCase().indexOf("BIKE") >= 0) ||
-                    (request.vehicle.toUpperCase() === "MTB")) {
+            } else if ((request.getVehicle().toUpperCase().indexOf("BIKE") >= 0) ||
+                    (request.getVehicle().toUpperCase() === "MTB")) {
                 addToGoogle = "&dirflg=b";
                 // ? addToBing = "&mode=B";
             }
@@ -1214,25 +1233,24 @@ function parseUrl(query) {
         if (value === "")
             continue;
 
-        if (key === "point" && !res[key]) {
-            res[key] = [value];
-        } else if (typeof res[key] === "string") {
-            var arr = [res[key], value];
-            res[key] = arr;
-        } else if (typeof res[key] === "undefined") {
-            if (value === 'true') {
-                res[key] = true;
-            } else if (value === 'false') {
-                res[key] = false;
-            } else {
-                var tmp = Number(value);
-                if (isNaN(tmp))
-                    res[key] = value;
-                else
-                    res[key] = Number(value);
-            }
+        // force array for heading and point
+        if (typeof res[key] === "undefined"
+                && key !== "heading" && key !== "point") {
+            if (value === 'true')
+                value = true;
+            else if (value === 'false')
+                value = false;
+
+            res[key] = value;
         } else {
-            res[key].push(value);
+            var tmpVal = res[key];
+            if (GHroute.isArray(tmpVal)) {
+                tmpVal.push(value);
+            } else if (tmpVal) {
+                res[key] = [tmpVal, value];
+            } else {
+                res[key] = [value];
+            }
         }
     }
     return res;

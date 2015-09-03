@@ -1,9 +1,6 @@
 package com.graphhopper.storage.extensions;
 
-import com.graphhopper.storage.DataAccess;
-import com.graphhopper.storage.GraphExtension;
-import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.storage.NodeAccess;
+import com.graphhopper.storage.*;
 
 /**
  * Storage extension to hold road signs, e.g. stop signs or traffic lights.
@@ -26,8 +23,7 @@ public class RoadSignExtension implements GraphExtension
      */
     private DataAccess storage;
 
-    private GraphStorage graph;
-    private NodeAccess nodeAccess;
+    private Graph graph;
 
     @Override
     public boolean isRequireNodeField()
@@ -53,15 +49,13 @@ public class RoadSignExtension implements GraphExtension
         return 0;
     }
 
-    @Override
-    public void init(GraphStorage graph)
+    public void init(Graph graph, Directory dir)
     {
         if (entryCount > 0)
             throw new AssertionError("The road sign extension must be initialized only once.");
 
         this.graph = graph;
-        this.nodeAccess = graph.getNodeAccess();
-        this.storage = this.graph.getDirectory().find("road_signs");
+        this.storage = dir.find("road_signs");
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.graphhopper.storage.extensions;
 
 import com.graphhopper.storage.Graph;
+import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.storage.NodeAccess;
 
 
@@ -16,7 +17,7 @@ public class RoadSignEncoder
 
     NodeAccess nodes;
 
-    public RoadSignEncoder(Graph graph)
+    public RoadSignEncoder(GraphHopperStorage graph)
     {
         if (!(graph.getExtension() instanceof RoadSignExtension))
         {
