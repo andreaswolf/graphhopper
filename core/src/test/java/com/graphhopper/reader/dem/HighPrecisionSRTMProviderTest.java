@@ -19,28 +19,25 @@
 package com.graphhopper.reader.dem;
 
 import com.graphhopper.storage.DAType;
-
 import java.io.File;
 import java.io.IOException;
-
 import org.junit.After;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
-
 import org.junit.Before;
 
 /**
+ *
  * @author Peter Karich
  */
-public class SRTMProviderTest
+public class HighPrecisionSRTMProviderTest
 {
-    SRTMProvider instance;
+    HighPrecisionSRTMProvider instance;
 
     @Before
     public void setUp()
     {
-        instance = new SRTMProvider();
+        instance = new HighPrecisionSRTMProvider();
     }
 
     @After
@@ -52,15 +49,15 @@ public class SRTMProviderTest
     @Test
     public void testGetFileString()
     {
-        assertEquals("Eurasia/N49E011", instance.getFileString(49, 11));
-        assertEquals("Eurasia/N52W002", instance.getFileString(52.268157, -1.230469));
-        assertEquals("Africa/S06E034", instance.getFileString(-5.965754, 34.804687));
-        assertEquals("Australia/S29E131", instance.getFileString(-28.304381, 131.484375));
-        assertEquals("South_America/S09W045", instance.getFileString(-9, -45));
-        assertEquals("South_America/S10W046", instance.getFileString(-9.1, -45.1));
-        assertEquals("South_America/S10W045", instance.getFileString(-9.6, -45));
-        assertEquals("South_America/S28W071", instance.getFileString(-28, -71));
-        assertEquals("South_America/S29W072", instance.getFileString(-28.88316, -71.070557));
+        assertEquals("N49E011.SRTMGL1", instance.getFileString(49, 11));
+        assertEquals("N52W002.SRTMGL1", instance.getFileString(52.268157, -1.230469));
+        assertEquals("S06E034.SRTMGL1", instance.getFileString(-5.965754, 34.804687));
+        assertEquals("S29E131.SRTMGL1", instance.getFileString(-28.304381, 131.484375));
+        assertEquals("S09W045.SRTMGL1", instance.getFileString(-9, -45));
+        assertEquals("S10W046.SRTMGL1", instance.getFileString(-9.1, -45.1));
+        assertEquals("S10W045.SRTMGL1", instance.getFileString(-9.6, -45));
+        assertEquals("S28W071.SRTMGL1", instance.getFileString(-28, -71));
+        assertEquals("S29W072.SRTMGL1", instance.getFileString(-28.88316, -71.070557));
     }
 
     @Test
