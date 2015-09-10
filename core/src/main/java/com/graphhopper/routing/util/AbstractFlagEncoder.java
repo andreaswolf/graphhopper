@@ -816,10 +816,9 @@ public abstract class AbstractFlagEncoder implements FlagEncoder, TurnCostEncode
     {
         double maxSpeed = getMaxSpeed(way);
         // apply only if smaller maxSpeed
-        if (maxSpeed >= 0)
+        if (maxSpeed >= 0 && (force || maxSpeed < speed))
         {
-            if (force || maxSpeed < speed)
-                return maxSpeed * 0.9;
+            return maxSpeed;
         }
         return speed;
     }
